@@ -1,0 +1,57 @@
+{
+  "name": "wa-archiver",
+  "version": "1.0.0",
+  "description": "WA Archiver — A privacy-first, fullstack WhatsApp chat & media vault with on-disk SQLite indexing, authentic WhatsApp Web aesthetics, voice note player, and analytics dashboard.",
+  "license": "MIT",
+  "author": "Osama Bashir",
+  "keywords": [
+    "whatsapp",
+    "wa-archiver",
+    "whatsapp-archiver",
+    "whatsapp-viewer",
+    "whatsapp-export",
+    "chat-viewer",
+    "sqlite",
+    "react",
+    "typescript",
+    "express",
+    "docker"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n \"server,client\" -c \"blue,green\" \"npm run server:dev\" \"npm run client:dev\"",
+    "server:dev": "tsx watch server/index.ts",
+    "client:dev": "vite",
+    "build": "tsc -b && vite build && tsc -p server/tsconfig.json",
+    "preview": "vite preview",
+    "start": "NODE_ENV=production node dist-server/index.js"
+  },
+  "dependencies": {
+    "@types/sql.js": "^1.4.11",
+    "adm-zip": "^0.5.16",
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "lucide-react": "^1.16.0",
+    "multer": "^1.4.5-lts.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.14.2"
+  },
+  "devDependencies": {
+    "@tanstack/react-virtual": "^3.13.2",
+    "@types/adm-zip": "^0.5.7",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.13.4",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0"
+  }
+}

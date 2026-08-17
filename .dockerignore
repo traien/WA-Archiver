@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-server
+data
+.git
+.gitignore
+*.zip
+.gemini
+.env
+.DS_Store
+*.log

@@ -1,0 +1,17 @@
+services:
+  whatsapp-viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whatsapp-viewer
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=admin123
+    volumes:
+      # Preserve SQLite database (whatsapp.db) and extracted media on host disk
+      - ./data:/app/data
