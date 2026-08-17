@@ -176,6 +176,27 @@ export const api = {
     return request<{ analytics: ChatAnalytics }>(`/api/chats/${chatId}/analytics`);
   },
 
+  // Starred Messages
+  async toggleStarMessage(chatId: string, messageId: string, isStarred: boolean): Promise<{ success: boolean; is_starred: number }> {
+    return request<{ success: boolean; is_starred: number }>(`/api/chats/${chatId}/messages/${messageId}/star`, {
+      method: 'POST',
+      body: JSON.stringify({ is_starred: isStarred })
+    });
+  },
+
+  async getStarredMessages(chatId: string): Promise<{ messages: Message[] }> {
+    return request<{ messages: Message[] }>(`/api/chats/${chatId}/starred`);
+  },
+
+  // Export
+  async getChatExport(chatId: string, startDate?: string, endDate?: string): Promise<{ chat: Chat; messages: Message[]; participants: Participant[] }> {
+    const query = new URLSearchParams();
+    if (startDate) query.set('startDate', startDate);
+    if (endDate) query.set('endDate', endDate);
+    const qs = query.toString() ? `?${query.toString()}` : '';
+    return request<{ chat: Chat; messages: Message[]; participants: Participant[] }>(`/api/chats/${chatId}/export${qs}`);
+  },
+
   // Settings & Storage
   async applyMeIdentities(identities: string[]): Promise<{ success: boolean; updatedCount: number; totalParticipants: number }> {
     return request<{ success: boolean; updatedCount: number; totalParticipants: number }>('/api/settings/apply-me-identity', {

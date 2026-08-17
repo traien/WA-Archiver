@@ -10,7 +10,8 @@ import {
   ImageOff,
   Mic,
   Sparkles,
-  Pencil
+  Pencil,
+  Star
 } from 'lucide-react';
 import { Message } from '../../types';
 import { VoiceNotePlayer } from './VoiceNotePlayer';
@@ -21,6 +22,7 @@ interface MessageBubbleProps {
   isGroup: boolean;
   onOpenMedia: (media: { url: string; type: string; name: string }) => void;
   onSenderClick?: (senderName: string) => void;
+  onToggleStar?: (messageId: string, isStarred: boolean) => void;
   searchQuery?: string;
   wholeWord?: boolean;
   isHighlighted?: boolean;
@@ -31,6 +33,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({
   isGroup,
   onOpenMedia,
   onSenderClick,
+  onToggleStar,
   searchQuery = '',
   wholeWord = false,
   isHighlighted = false
@@ -714,7 +717,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({
           </div>
         )}
 
-        {/* Time Stamp, Edited Indicator & Status Read Receipt */}
+        {/* Time Stamp, Starred Indicator, Edited Indicator & Status Read Receipt */}
         <div style={{
           float: 'right',
           display: 'inline-flex',
@@ -726,6 +729,32 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({
           marginLeft: '8px',
           userSelect: 'none'
         }}>
+          {/* Star Toggle / Badge */}
+          {onToggleStar && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStar(message.id, !Boolean(message.is_starred));
+              }}
+              title={message.is_starred ? 'Unstar message' : 'Star message'}
+              className="msg-star-btn"
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '1px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: message.is_starred ? '#eab308' : 'var(--text-muted)',
+                opacity: message.is_starred ? 1 : 0.45,
+                transition: 'opacity 0.15s, transform 0.1s'
+              }}
+            >
+              <Star size={12} fill={message.is_starred ? '#eab308' : 'none'} />
+            </button>
+          )}
+
           {isEdited && (
             <span 
               title="This message was edited in WhatsApp (تم تعديل هذه الرسالة)"
@@ -754,6 +783,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = memo(({
 }, (prevProps, nextProps) => {
   return (
     prevProps.message.id === nextProps.message.id &&
+    prevProps.message.is_starred === nextProps.message.is_starred &&
     prevProps.isHighlighted === nextProps.isHighlighted &&
     prevProps.searchQuery === nextProps.searchQuery &&
     prevProps.isGroup === nextProps.isGroup &&

@@ -62,6 +62,7 @@ export interface Message {
   quoted_text: string | null;
   quoted_sender: string | null;
   reactions: string | null;
+  is_starred?: number | boolean;
 }
 
 export interface ChatAnalytics {

@@ -16,7 +16,9 @@ All data is stored directly on your local machine in a physical SQLite database 
 
 ## Highlights
 
-- **Authentic WhatsApp Web Interface**: Pixel-accurate light and dark themes, background doodle wallpapers, chat bubble tails, read receipts, and participant group color palettes.
+- **Printable PDF & Standalone HTML Exporter**: 1-click export of any conversation (full or custom date range) to a clean, paginated printable PDF layout or a standalone single-file `.html` archive that opens anywhere offline in any browser.
+- **Starred Messages Vault (Bookmarks)**: Star / bookmark important messages with a gold ⭐ badge directly in the chat and access them anytime in the dedicated Starred Vault with 1-click jump navigation.
+- **Authentic WhatsApp Web Interface**: Pixel-accurate light and dark themes, background doodle wallpapers, chat bubble tails, read receipts, participant group color palettes, and streamlined header toolbar.
 - **High-Scale Virtualization**: Custom sliding-window pagination architecture capable of rendering chats with **100,000+ messages** seamlessly with sub-10ms render cycles and minimal memory footprint.
 - **Pixel-Anchor Scroll Restoration**: Synchronous scroll anchor calculation (`useLayoutEffect`) that preserves reading coordinates across chat switches and browser reloads without visual jitter.
 - **Multi-Platform & Multi-Language Ingestion**: Ingests exports from WhatsApp Desktop (macOS / Windows), iOS, and Android across English, Arabic, and mixed locales. Recognizes timestamps down to the second, dotAll multiline captions, CAD/DWG engineering files, and vCards.

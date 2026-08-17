@@ -9,6 +9,7 @@ import { UploadModal } from './components/Modals/UploadModal';
 import { MediaLightbox } from './components/Lightbox/MediaLightbox';
 import { AnalyticsModal } from './components/Analytics/AnalyticsModal';
 import { SettingsModal } from './components/Modals/SettingsModal';
+import { ExportModal } from './components/Modals/ExportModal';
 import { useSettings } from './context/SettingsContext';
 import { Upload } from 'lucide-react';
 import { WAArchiverLogo } from './components/Common/WAArchiverLogo';
@@ -35,11 +36,12 @@ export const App: React.FC = () => {
   // Filters, Drawer & Search
   const [dateFilter, setDateFilter] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerTab, setDrawerTab] = useState<'info' | 'media' | 'search'>('info');
+  const [drawerTab, setDrawerTab] = useState<'info' | 'media' | 'starred' | 'search'>('info');
   const [drawerTargetParticipantId, setDrawerTargetParticipantId] = useState<string | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [lightboxMedia, setLightboxMedia] = useState<{ url: string; type: string; name: string } | null>(null);
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
 
@@ -274,9 +276,20 @@ export const App: React.FC = () => {
   };
 
   // Open right drawer with specific tab
-  const handleOpenDrawerWithTab = (tab: 'info' | 'media' | 'search') => {
+  const handleOpenDrawerWithTab = (tab: 'info' | 'media' | 'starred' | 'search') => {
     setDrawerTab(tab);
     setIsDrawerOpen(true);
+  };
+
+  // Toggle star message
+  const handleToggleStarMessage = async (msgId: string, isStarred: boolean) => {
+    if (!activeChatId) return;
+    try {
+      await api.toggleStarMessage(activeChatId, msgId, isStarred);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, is_starred: isStarred ? 1 : 0 } : m));
+    } catch (err) {
+      console.error('Failed to toggle star message:', err);
+    }
   };
 
   // Logout
@@ -322,6 +335,8 @@ export const App: React.FC = () => {
           onOpenDrawer={handleOpenDrawerWithTab}
           onOpenMedia={setLightboxMedia}
           onUpdateChat={handleUpdateChat}
+          onOpenExport={() => setIsExportOpen(true)}
+          onToggleStarMessage={handleToggleStarMessage}
           dateFilter={dateFilter}
           onClearDateFilter={() => handleSelectDateFilter(null)}
           onSelectDateFilter={handleSelectDateFilter}
@@ -386,7 +401,7 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Right Drawer (Contact Info, Participants, Search, Media) */}
+      {/* 3. Right Drawer (Contact Info, Participants, Search, Starred, Media) */}
       {activeChat && (
         <ContactInfoDrawer
           chat={activeChat}
@@ -406,6 +421,7 @@ export const App: React.FC = () => {
           }}
           onOpenMedia={setLightboxMedia}
           onJumpToMessage={handleJumpToMessage}
+          onOpenExport={() => setIsExportOpen(true)}
         />
       )}
 
@@ -416,20 +432,28 @@ export const App: React.FC = () => {
         onUploadSuccess={handleUploadSuccess}
       />
 
-      {/* 5. Full-screen Media Lightbox */}
+      {/* 5. Printable PDF & HTML Chat Exporter Modal */}
+      <ExportModal
+        isOpen={isExportOpen}
+        onClose={() => setIsExportOpen(false)}
+        chat={activeChat}
+        participants={participants}
+      />
+
+      {/* 6. Full-screen Media Lightbox */}
       <MediaLightbox
         media={lightboxMedia}
         onClose={() => setLightboxMedia(null)}
       />
 
-      {/* 6. Chat Analytics Dashboard */}
+      {/* 7. Chat Analytics Dashboard */}
       <AnalyticsModal
         chat={activeChat}
         isOpen={isAnalyticsOpen}
         onClose={() => setIsAnalyticsOpen(false)}
       />
 
-      {/* 7. Settings Modal */}
+      {/* 8. Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

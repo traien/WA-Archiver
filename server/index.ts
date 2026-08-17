@@ -521,6 +521,51 @@ app.get('/api/chats/:id/analytics', authMiddleware, (req: Request, res: Response
   }
 });
 
+// ================= STARRED MESSAGES =================
+app.post('/api/chats/:id/messages/:msgId/star', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const chatId = String(req.params.id);
+    const msgId = String(req.params.msgId);
+    const isStarred = req.body.is_starred === true || req.body.is_starred === 1;
+    dbOps.toggleStarMessage(chatId, msgId, isStarred);
+    res.json({ success: true, is_starred: isStarred ? 1 : 0 });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/chats/:id/starred', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const chatId = String(req.params.id);
+    const messages = dbOps.getStarredMessages(chatId);
+    res.json({ messages });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ================= CHAT EXPORT ENDPOINT =================
+app.get('/api/chats/:id/export', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const chatId = String(req.params.id);
+    const startDate = req.query.startDate ? String(req.query.startDate) : undefined;
+    const endDate = req.query.endDate ? String(req.query.endDate) : undefined;
+
+    const chat = dbOps.getChatById(chatId);
+    if (!chat) {
+      res.status(404).json({ error: 'Chat not found' });
+      return;
+    }
+
+    const messages = dbOps.getAllMessagesForExport(chatId, startDate, endDate);
+    const participants = dbOps.getParticipants(chatId);
+
+    res.json({ chat, messages, participants });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Serve static frontend assets in production
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {

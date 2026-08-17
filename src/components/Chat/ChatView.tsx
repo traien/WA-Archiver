@@ -12,7 +12,9 @@ import {
   Filter,
   Loader2,
   Edit3,
-  Check
+  Check,
+  Star,
+  Printer
 } from 'lucide-react';
 import { Chat, Participant, Message } from '../../types';
 import { MessageBubble } from './MessageBubble';
@@ -31,9 +33,11 @@ interface ChatViewProps {
   onLoadMoreNewer?: () => void;
   onScrollToLatest?: () => void;
   onJumpToMessage?: (msgId: string) => void;
-  onOpenDrawer: (tab: 'info' | 'media' | 'search') => void;
+  onOpenDrawer: (tab: 'info' | 'media' | 'starred' | 'search') => void;
   onOpenMedia: (media: { url: string; type: string; name: string }) => void;
   onUpdateChat?: (updated: Chat) => void;
+  onOpenExport?: () => void;
+  onToggleStarMessage?: (messageId: string, isStarred: boolean) => void;
   dateFilter: string | null;
   onClearDateFilter: () => void;
   onSelectDateFilter: (date: string | null) => void;
@@ -56,6 +60,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   onOpenDrawer,
   onOpenMedia,
   onUpdateChat,
+  onOpenExport,
+  onToggleStarMessage,
   dateFilter,
   onClearDateFilter,
   onSelectDateFilter,
@@ -69,6 +75,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const anchorRestoredRef = useRef<boolean>(false);
   const activeChatIdRef = useRef<string>(chat.id);
   const saveAnchorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleToggleStar = useCallback(async (messageId: string, isStarred: boolean) => {
+    if (onToggleStarMessage) {
+      onToggleStarMessage(messageId, isStarred);
+    } else {
+      try {
+        await api.toggleStarMessage(chat.id, messageId, isStarred);
+        const target = messages.find(m => m.id === messageId);
+        if (target) {
+          target.is_starred = isStarred ? 1 : 0;
+        }
+      } catch (err) {
+        console.error('Failed to toggle star:', err);
+      }
+    }
+  }, [chat.id, onToggleStarMessage, messages]);
 
   // In-chat search state with 0ms in-memory cache
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -714,7 +736,47 @@ export const ChatView: React.FC<ChatViewProps> = ({
             </div>
           )}
 
-          {/* 3. Media Gallery Button */}
+          {/* 3. Starred Messages Vault */}
+          <button
+            onClick={() => onOpenDrawer('starred')}
+            title="Starred Messages (Bookmarks)"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              padding: '7px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <Star size={20} />
+          </button>
+
+          {/* 4. Export & Print */}
+          {onOpenExport && (
+            <button
+              onClick={onOpenExport}
+              title="Export & Print Chat (PDF / HTML)"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                padding: '7px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Printer size={20} />
+            </button>
+          )}
+
+          {/* 5. Media Gallery Button */}
           <button
             onClick={() => onOpenDrawer('media')}
             title="Open Media Gallery"
@@ -733,7 +795,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
             <ImageIcon size={20} />
           </button>
 
-          {/* 4. Contact Info & Options */}
+          {/* 6. Contact Info & Options */}
           <button
             onClick={() => onOpenDrawer('info')}
             title="Contact Info & Participants"
@@ -1039,6 +1101,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     isGroup={isGroup}
                     onOpenMedia={onOpenMedia}
                     onSenderClick={onSenderClick}
+                    onToggleStar={handleToggleStar}
                     searchQuery={isMatching ? inChatSearchQuery : ''}
                     wholeWord={isWholeWord}
                     isHighlighted={highlightedMsgId === msg.id || currentActiveMsgId === msg.id}

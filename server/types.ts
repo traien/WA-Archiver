@@ -55,6 +55,7 @@ export interface Message {
   quoted_text: string | null;
   quoted_sender: string | null;
   reactions: string | null; // JSON string e.g. [{"emoji": "❤️", "count": 1}]
+  is_starred?: number; // 0 or 1
 }
 
 export interface ParsedMessage {

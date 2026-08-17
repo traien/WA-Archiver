@@ -2,16 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Users, 
-  User,
+  User, 
   Phone, 
   Edit3, 
   Check, 
   FileText, 
   Music, 
   Search, 
-  CornerDownRight
+  CornerDownRight,
+  Star,
+  Printer
 } from 'lucide-react';
-import { Chat, Participant, MediaItem } from '../../types';
+import { Chat, Participant, MediaItem, Message } from '../../types';
 import { api } from '../../api/client';
 import { PARTICIPANT_COLORS } from '../../../server/parser';
 import { useSettings } from '../../context/SettingsContext';
@@ -20,14 +22,15 @@ interface ContactInfoDrawerProps {
   chat: Chat;
   participants: Participant[];
   isOpen: boolean;
-  activeTab: 'info' | 'media' | 'search';
+  activeTab: 'info' | 'media' | 'starred' | 'search';
   targetParticipantId?: string | null;
-  onTabChange: (tab: 'info' | 'media' | 'search') => void;
+  onTabChange: (tab: 'info' | 'media' | 'starred' | 'search') => void;
   onClose: () => void;
   onUpdateChat?: (updated: Chat) => void;
   onUpdateParticipants: (updated: Participant[]) => void;
   onOpenMedia: (media: { url: string; type: string; name: string }) => void;
   onJumpToMessage: (msgId: string) => void;
+  onOpenExport?: () => void;
 }
 
 export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
@@ -41,9 +44,42 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
   onUpdateChat,
   onUpdateParticipants,
   onOpenMedia,
-  onJumpToMessage
+  onJumpToMessage,
+  onOpenExport
 }) => {
   const { formatTime, formatDate } = useSettings();
+
+  // Starred messages state
+  const [starredMessages, setStarredMessages] = useState<Message[]>([]);
+  const [loadingStarred, setLoadingStarred] = useState(false);
+
+  const fetchStarredMessages = async () => {
+    setLoadingStarred(true);
+    try {
+      const res = await api.getStarredMessages(chat.id);
+      setStarredMessages(res.messages);
+    } catch (err) {
+      console.error('Failed to fetch starred messages:', err);
+    } finally {
+      setLoadingStarred(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && activeTab === 'starred') {
+      fetchStarredMessages();
+    }
+  }, [isOpen, activeTab, chat.id]);
+
+  const handleUnstarMessage = async (msgId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await api.toggleStarMessage(chat.id, msgId, false);
+      setStarredMessages(prev => prev.filter(m => m.id !== msgId));
+    } catch (err) {
+      console.error('Failed to unstar message:', err);
+    }
+  };
 
   // Chat rename state
   const [isEditingChatName, setIsEditingChatName] = useState(false);
@@ -253,12 +289,12 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
             <X size={20} />
           </button>
           <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>
-            {activeTab === 'info' ? 'Contact Info' : activeTab === 'media' ? 'Media & Docs' : 'Search in Chat'}
+            {activeTab === 'info' ? 'Contact Info' : activeTab === 'media' ? 'Media & Docs' : activeTab === 'starred' ? 'Starred Messages' : 'Search in Chat'}
           </span>
         </div>
       </div>
 
-      {/* 3 Clean Tabs Navigation: Participants, Media, Search */}
+      {/* 4 Clean Tabs Navigation: Participants, Media, Starred, Search */}
       <div style={{
         display: 'flex',
         borderBottom: '1px solid var(--border-color)',
@@ -273,12 +309,12 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
             border: 'none',
             borderBottom: `2.5px solid ${activeTab === 'info' ? 'var(--wa-primary)' : 'transparent'}`,
             color: activeTab === 'info' ? 'var(--wa-primary)' : 'var(--text-secondary)',
-            fontSize: '13px',
+            fontSize: '12.5px',
             fontWeight: 600,
             cursor: 'pointer'
           }}
         >
-          Participants ({participants.length})
+          Info
         </button>
 
         <button
@@ -290,12 +326,34 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
             border: 'none',
             borderBottom: `2.5px solid ${activeTab === 'media' ? 'var(--wa-primary)' : 'transparent'}`,
             color: activeTab === 'media' ? 'var(--wa-primary)' : 'var(--text-secondary)',
-            fontSize: '13px',
+            fontSize: '12.5px',
             fontWeight: 600,
             cursor: 'pointer'
           }}
         >
           Media ({chat.media_count})
+        </button>
+
+        <button
+          onClick={() => onTabChange('starred')}
+          style={{
+            flex: 1,
+            padding: '12px 0',
+            background: 'none',
+            border: 'none',
+            borderBottom: `2.5px solid ${activeTab === 'starred' ? 'var(--wa-primary)' : 'transparent'}`,
+            color: activeTab === 'starred' ? 'var(--wa-primary)' : 'var(--text-secondary)',
+            fontSize: '12.5px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '4px'
+          }}
+        >
+          <Star size={13} fill={activeTab === 'starred' ? 'var(--wa-primary)' : 'none'} />
+          <span>Starred</span>
         </button>
 
         <button
@@ -307,7 +365,7 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
             border: 'none',
             borderBottom: `2.5px solid ${activeTab === 'search' ? 'var(--wa-primary)' : 'transparent'}`,
             color: activeTab === 'search' ? 'var(--wa-primary)' : 'var(--text-secondary)',
-            fontSize: '13px',
+            fontSize: '12.5px',
             fontWeight: 600,
             cursor: 'pointer'
           }}
@@ -429,6 +487,47 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
                 {chat.type === 'group' ? `Group Chat • ${participants.length} participants` : 'Personal Conversation (1:1)'}
               </div>
             </div>
+
+            {/* Export & Print Action */}
+            {onOpenExport && (
+              <div style={{
+                backgroundColor: 'var(--bg-modal)',
+                padding: '12px 14px',
+                borderRadius: '10px',
+                border: '1px solid var(--border-color)',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Printer size={18} color="var(--wa-primary)" />
+                  <div>
+                    <div style={{ fontSize: '13.5px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      Export & Print Chat
+                    </div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--text-secondary)' }}>
+                      Printable PDF & Standalone HTML
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={onOpenExport}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--wa-primary)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Export
+                </button>
+              </div>
+            )}
 
             {/* Participants Section with Search */}
             <div style={{ marginBottom: '8px' }}>
@@ -863,7 +962,107 @@ export const ContactInfoDrawer: React.FC<ContactInfoDrawerProps> = ({
           </div>
         )}
 
-        {/* TAB 3: SEARCH IN CHAT */}
+        {/* TAB 3: STARRED MESSAGES */}
+        {activeTab === 'starred' && (
+          <div>
+            {loadingStarred ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-secondary)', fontSize: '13px' }}>
+                Loading starred messages...
+              </div>
+            ) : starredMessages.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                  {starredMessages.length} starred message{starredMessages.length === 1 ? '' : 's'}
+                </div>
+                {starredMessages.map(msg => (
+                  <div
+                    key={msg.id}
+                    onClick={() => onJumpToMessage(msg.id)}
+                    style={{
+                      padding: '12px',
+                      borderRadius: '10px',
+                      backgroundColor: 'var(--bg-modal)',
+                      border: '1px solid var(--border-color)',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s, border-color 0.15s',
+                      position: 'relative'
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-sidebar-hover)';
+                      e.currentTarget.style.borderColor = 'var(--wa-primary)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.backgroundColor = 'var(--bg-modal)';
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontWeight: 600, color: (msg as any).sender_color || 'var(--wa-primary)', fontSize: '12.5px' }}>
+                        {(msg as any).sender_name || msg.raw_sender || 'User'}
+                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                          {formatDate(msg.date_str)} {formatTime(msg.time_str)}
+                        </span>
+                        <button
+                          onClick={(e) => handleUnstarMessage(msg.id, e)}
+                          title="Remove from starred"
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '2px',
+                            color: '#eab308',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <Star size={14} fill="#eab308" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ color: 'var(--text-primary)', marginBottom: '6px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                      {msg.type !== 'text' && (
+                        <span style={{
+                          display: 'inline-block',
+                          backgroundColor: 'rgba(0, 168, 132, 0.12)',
+                          color: 'var(--wa-primary)',
+                          padding: '1px 6px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          marginRight: '6px'
+                        }}>
+                          [{msg.type.toUpperCase()}]
+                        </span>
+                      )}
+                      {msg.content}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--wa-primary)', fontWeight: 600 }}>
+                      <CornerDownRight size={12} />
+                      <span>Click to jump to message in chat</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
+                <Star size={36} color="var(--border-subtle)" style={{ marginBottom: '12px' }} />
+                <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                  No Starred Messages Yet
+                </div>
+                <div style={{ fontSize: '12.5px', lineHeight: '1.4' }}>
+                  Hover over any message in the chat and click the ⭐ icon to bookmark it here for quick access.
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: SEARCH IN CHAT */}
         {activeTab === 'search' && (
           <div>
             <form onSubmit={handleSearchSubmit} style={{ marginBottom: '14px' }}>

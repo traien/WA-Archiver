@@ -117,15 +117,24 @@ export async function initDatabase(): Promise<Database> {
       is_forwarded INTEGER NOT NULL DEFAULT 0,
       quoted_text TEXT,
       quoted_sender TEXT,
-      reactions TEXT
+      reactions TEXT,
+      is_starred INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE INDEX IF NOT EXISTS idx_messages_chat_timestamp ON messages (chat_id, timestamp ASC);
     CREATE INDEX IF NOT EXISTS idx_messages_chat_date ON messages (chat_id, date_str);
     CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages (sender_id);
     CREATE INDEX IF NOT EXISTS idx_messages_type ON messages (type);
+    CREATE INDEX IF NOT EXISTS idx_messages_starred ON messages (chat_id, is_starred);
     CREATE INDEX IF NOT EXISTS idx_participants_chat ON participants (chat_id);
   `);
+
+  // Migration: add is_starred column to existing database if needed
+  try {
+    dbInstance.run('ALTER TABLE messages ADD COLUMN is_starred INTEGER NOT NULL DEFAULT 0');
+  } catch (e) {
+    // Column already exists
+  }
 
   // Auto-repair any mojibake in existing chat titles and participants
   try {
@@ -799,5 +808,60 @@ export const dbOps = {
         documents: mbRow.documents || 0
       }
     };
+  },
+
+  // Starred Messages
+  toggleStarMessage(chatId: string, messageId: string, isStarred: boolean) {
+    const db = getDb();
+    db.run('UPDATE messages SET is_starred = ? WHERE id = ? AND chat_id = ?', [isStarred ? 1 : 0, messageId, chatId]);
+    saveDatabaseToDisk();
+  },
+
+  getStarredMessages(chatId: string): (Message & { sender_name?: string; sender_color?: string; sender_phone?: string; is_me?: number })[] {
+    const db = getDb();
+    const sql = `
+      SELECT m.*, p.display_name as sender_name, p.color as sender_color, p.is_me as is_me, p.phone_number as sender_phone
+      FROM messages m
+      LEFT JOIN participants p ON m.sender_id = p.id
+      WHERE m.chat_id = ? AND m.is_starred = 1
+      ORDER BY m.timestamp ASC
+    `;
+    const stmt = db.prepare(sql);
+    stmt.bind([chatId]);
+    const results: any[] = [];
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return results;
+  },
+
+  // Full Chat Export Query
+  getAllMessagesForExport(chatId: string, startDate?: string, endDate?: string): (Message & { sender_name?: string; sender_color?: string; sender_phone?: string; is_me?: number })[] {
+    const db = getDb();
+    let sql = `
+      SELECT m.*, p.display_name as sender_name, p.color as sender_color, p.is_me as is_me, p.phone_number as sender_phone
+      FROM messages m
+      LEFT JOIN participants p ON m.sender_id = p.id
+      WHERE m.chat_id = ?
+    `;
+    const params: any[] = [chatId];
+    if (startDate) {
+      sql += ' AND m.date_str >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      sql += ' AND m.date_str <= ?';
+      params.push(endDate);
+    }
+    sql += ' ORDER BY m.timestamp ASC';
+    const stmt = db.prepare(sql);
+    stmt.bind(params);
+    const results: any[] = [];
+    while (stmt.step()) {
+      results.push(stmt.getAsObject());
+    }
+    stmt.free();
+    return results;
   }
 };

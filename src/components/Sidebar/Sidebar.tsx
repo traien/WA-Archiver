@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
@@ -9,7 +9,8 @@ import {
   Users, 
   Trash2, 
   MessageSquare,
-  Settings
+  Settings,
+  MoreVertical
 } from 'lucide-react';
 import { Chat } from '../../types';
 import { useSettings } from '../../context/SettingsContext';
@@ -43,6 +44,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { formatTime } = useSettings();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'personal' | 'group'>('all');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
 
   const filteredChats = chats.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -69,35 +85,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        borderBottom: '1px solid var(--border-color)'
+        borderBottom: '1px solid var(--border-color)',
+        position: 'relative'
       }}>
         {/* App Branding & Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <WAArchiverLogo size={36} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.2px' }}>
-              WA Archiver
-            </div>
-            <span style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              color: 'var(--wa-primary)',
-              backgroundColor: 'rgba(0, 168, 132, 0.12)',
-              padding: '1px 5px',
-              borderRadius: '4px',
-              border: '1px solid rgba(0, 168, 132, 0.25)'
-            }}>
-              v1.0.0
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+          <WAArchiverLogo size={34} />
+          <div style={{
+            fontSize: '15.5px',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.2px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            WA Archiver
           </div>
         </div>
 
         {/* Action Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }} ref={menuRef}>
           {/* New Import Button */}
           <button
             onClick={onOpenUpload}
-            title="Import WhatsApp .zip export"
+            title="Import WhatsApp .zip archive"
             style={{
               width: '34px',
               height: '34px',
@@ -109,30 +121,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 2px 5px rgba(0, 168, 132, 0.3)'
+              boxShadow: '0 2px 6px rgba(0, 168, 132, 0.35)',
+              transition: 'transform 0.15s'
             }}
           >
             <Plus size={20} />
-          </button>
-
-          {/* Analytics Button */}
-          <button
-            onClick={onOpenAnalytics}
-            title="View Chat Statistics & Analytics"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              backgroundColor: 'transparent',
-              color: 'var(--text-secondary)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <BarChart3 size={19} />
           </button>
 
           {/* Settings Button */}
@@ -149,51 +142,140 @@ export const Sidebar: React.FC<SidebarProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'background-color 0.15s'
             }}
           >
             <Settings size={19} />
           </button>
 
-          {/* Theme Switcher */}
-          <button
-            onClick={onToggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              backgroundColor: 'transparent',
-              color: 'var(--text-secondary)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            {theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
-          </button>
+          {/* More Options Dropdown Button */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              title="More options"
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '50%',
+                backgroundColor: isMenuOpen ? 'var(--hover-item)' : 'transparent',
+                color: 'var(--text-secondary)',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer'
+              }}
+            >
+              <MoreVertical size={19} />
+            </button>
 
-          {/* Logout */}
-          <button
-            onClick={onLogout}
-            title="Logout"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              backgroundColor: 'transparent',
-              color: 'var(--text-secondary)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <LogOut size={18} />
-          </button>
+            {/* Dropdown Menu */}
+            {isMenuOpen && (
+              <div style={{
+                position: 'absolute',
+                top: '42px',
+                right: '0',
+                width: '200px',
+                backgroundColor: 'var(--bg-modal)',
+                borderRadius: '10px',
+                boxShadow: 'var(--shadow-main)',
+                border: '1px solid var(--border-subtle)',
+                padding: '6px',
+                zIndex: 100,
+                animation: 'fadeIn 0.15s ease-out'
+              }}>
+                {/* Analytics */}
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onOpenAnalytics();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-primary)',
+                    fontSize: '13.5px',
+                    textAlign: 'left',
+                    cursor: 'pointer'
+                  }}
+                  className="dropdown-item"
+                >
+                  <BarChart3 size={16} color="var(--wa-primary)" />
+                  <span>Chat Analytics</span>
+                </button>
+
+                {/* Theme Toggle */}
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onToggleTheme();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-primary)',
+                    fontSize: '13.5px',
+                    textAlign: 'left',
+                    cursor: 'pointer'
+                  }}
+                  className="dropdown-item"
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun size={16} color="#eab308" />
+                      <span>Light Theme</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon size={16} color="#6366f1" />
+                      <span>Dark Theme</span>
+                    </>
+                  )}
+                </button>
+
+                <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '4px 0' }} />
+
+                {/* Log Out */}
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onLogout();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    border: 'none',
+                    borderRadius: '6px',
+                    backgroundColor: 'transparent',
+                    color: '#ef4444',
+                    fontSize: '13.5px',
+                    textAlign: 'left',
+                    cursor: 'pointer'
+                  }}
+                  className="dropdown-item"
+                >
+                  <LogOut size={16} />
+                  <span>Log Out</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

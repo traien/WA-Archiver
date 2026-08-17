@@ -261,10 +261,19 @@ button:active {
   to { transform: rotate(360deg); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.dropdown-item:hover {
+  background-color: var(--hover-item) !important;
 }
 
-.animate-slide-right {
-  animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Print Optimization */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .no-print {
+    display: none !important;
+  }
 }
