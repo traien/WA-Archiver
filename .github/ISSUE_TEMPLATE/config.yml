@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/traien/WA-Archiver/discussions
+    about: Ask questions, share homelab setups, or discuss ideas with the community.

@@ -1,9 +1,10 @@
 services:
-  whatsapp-viewer:
+  wa-archiver:
+    image: ghcr.io/traien/wa-archiver:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: whatsapp-viewer
+    container_name: wa-archiver
     restart: unless-stopped
     ports:
       - "3000:3000"

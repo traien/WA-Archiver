@@ -1,0 +1,75 @@
+name: 🐛 Bug Report
+description: Report a bug or issue in WA Archiver
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please check existing issues before submitting to avoid duplicates.
+  - type: input
+    id: version
+    attributes:
+      label: WA Archiver Version
+      description: What version of WA Archiver are you running? (e.g., v1.0.0, Docker latest, or git commit)
+      placeholder: v1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Deployment Environment
+      description: How are you running WA Archiver?
+      options:
+        - Docker Compose
+        - Docker Run (GHCR)
+        - Local Node.js (npm run dev / npm start)
+        - Unraid / CasaOS / TrueNAS
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: export_platform
+    attributes:
+      label: WhatsApp Export Platform
+      description: Which platform did the chat export originate from?
+      options:
+        - WhatsApp for iOS (iPhone)
+        - WhatsApp for Android
+        - WhatsApp Desktop (macOS)
+        - WhatsApp Desktop (Windows)
+        - Other
+    validations:
+      required: false
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue.
+      placeholder: |
+        1. Upload a .zip export containing...
+        2. Navigate to chat...
+        3. Click on...
+        4. Observe error...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server / Browser Console Logs
+      description: Please copy and paste any relevant logs from the terminal or browser developer tools console.
+      render: shell

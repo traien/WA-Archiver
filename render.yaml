@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: wa-archiver
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: free
+    healthCheckPath: /api/auth/me
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: ADMIN_USERNAME
+        generateValue: false
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true
+    disk:
+      name: wa-data
+      mountPath: /app/data
+      sizeGB: 10

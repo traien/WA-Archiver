@@ -840,7 +840,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   ) : null}
 
                   {/* Cache Cleaning */}
-                  <div style={{ marginTop: '16px' }}>
+                  <div style={{ marginTop: '16px', marginBottom: '20px' }}>
                     <button
                       onClick={() => {
                         setCacheCleared(true);
@@ -858,6 +858,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     >
                       {cacheCleared ? 'Caches Cleared!' : 'Clear In-Memory Search Caches'}
                     </button>
+                  </div>
+
+                  {/* Legal Disclaimer */}
+                  <div style={{
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '11.5px',
+                    color: 'var(--text-muted)',
+                    lineHeight: '1.5'
+                  }}>
+                    <strong>Disclaimer:</strong> WA Archiver is an independent open-source project and is not affiliated, associated, authorized, endorsed by, or in any way officially connected with WhatsApp LLC, Meta Platforms, Inc., or any of their subsidiaries or affiliates.
                   </div>
                 </div>
               </>

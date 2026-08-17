@@ -73,14 +73,29 @@ All data is stored directly on your local machine in a physical SQLite database 
 
 ## Quick Start
 
-### Option 1: Docker Compose (Recommended)
+### Option 1: Run with Docker (Pre-built Image)
 
-The simplest way to run WA Archiver is via Docker Compose:
+Run the pre-built multi-arch image directly from GitHub Container Registry:
+
+```bash
+docker run -d \
+  --name wa-archiver \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  --restart unless-stopped \
+  ghcr.io/traien/wa-archiver:latest
+```
+
+Open `http://localhost:3000` (Default: `admin` / `admin123`).
+
+---
+
+### Option 2: Docker Compose
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/wa-archiver.git
-   cd wa-archiver
+   git clone https://github.com/traien/WA-Archiver.git
+   cd WA-Archiver
    ```
 
 2. Start the container:
@@ -88,20 +103,13 @@ The simplest way to run WA Archiver is via Docker Compose:
    docker compose up -d
    ```
 
-3. Open your browser and go to:
-   ```
-   http://localhost:3000
-   ```
-
-4. Log in using the default credentials:
-   - **Username**: `admin`
-   - **Password**: `admin123`
+3. Open your browser and go to `http://localhost:3000`.
 
 > **Note**: All SQLite databases, media files, and configurations are stored in `./data` on the host machine and persist across container updates.
 
 ---
 
-### Option 2: Local Development
+### Option 3: Local Development
 
 #### Prerequisites
 - **Node.js**: v20.x or higher
@@ -110,8 +118,8 @@ The simplest way to run WA Archiver is via Docker Compose:
 #### Installation
 ```bash
 # Clone repository
-git clone https://github.com/your-username/wa-archiver.git
-cd wa-archiver
+git clone https://github.com/traien/WA-Archiver.git
+cd WA-Archiver
 
 # Install dependencies
 npm install
@@ -199,7 +207,16 @@ You can customize runtime behavior by creating a `.env` file or configuring envi
 
 ---
 
+## Disclaimer
+
+**WA Archiver** is an independent open-source project and is not affiliated, associated, authorized, endorsed by, or in any way officially connected with WhatsApp LLC, Meta Platforms, Inc., or any of their subsidiaries or affiliates.
+
+The official WhatsApp website is located at [https://whatsapp.com](https://whatsapp.com). The names "WhatsApp", "WhatsApp Web", and related marks, logos, and emblems are registered trademarks of WhatsApp LLC and Meta Platforms, Inc.
+
+---
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
 

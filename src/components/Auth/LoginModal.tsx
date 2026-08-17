@@ -275,15 +275,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
           >
             {loading ? 'Authenticating...' : (
               <>
-                <span>Access Chat Viewer</span>
+                <span>Access Chat Vault</span>
                 <ArrowRight size={18} />
               </>
             )}
           </button>
         </form>
 
-        {/* Bottom padding */}
-        <div style={{ height: '12px' }} />
+        {/* Disclaimer / Trademark Notice */}
+        <div style={{
+          padding: '0 24px 20px',
+          textAlign: 'center',
+          fontSize: '11px',
+          color: 'var(--text-muted)',
+          lineHeight: '1.4'
+        }}>
+          Independent open-source project. Not affiliated with or endorsed by WhatsApp LLC or Meta Platforms, Inc.
+        </div>
       </div>
     </div>
   );
